@@ -24,7 +24,7 @@ const DepartmentHeadFaqs = () => {
 
     const totalPage = useSelector(depHFaqListPages)
 
-    const [params, setParams] = useState({ page: 0, size: 10 })
+    const [params, setParams] = useState({ page: 0, size: 10, department: 'all' })
     const [showCreateFaq, setShowCreateFaq] = useState(false)
     const [showDetailFaq, setShowDetailFaq] = useState(false)
     const [faq, setFaq] = useState({})
@@ -38,7 +38,7 @@ const DepartmentHeadFaqs = () => {
 
 
     const collumns = [
-        { key: "title", header: "Tiêu đề", department: 'all' },
+        { key: "title", header: "Tiêu đề" },
     ]
 
     const getFaqListData = async () => {
@@ -121,7 +121,7 @@ const DepartmentHeadFaqs = () => {
                         </StaffButton>
                     </div>
                     <div className="flex justify-start lg:justify-end space-x-4">
-                        <Filter params={params} setParams={setParams} data={fieldList} name={'field'} />
+                        <Filter params={params} setParams={setParams} data={fieldList} name={'fieldId'} />
                     </div>
                 </div>
                 <Table

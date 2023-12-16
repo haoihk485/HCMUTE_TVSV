@@ -1,6 +1,9 @@
 const StaffButton = ({ oC, color, children }) => {
+
+    const css = `${color ? `bg-[${color}]` : 'bg-green-600'} text-white py-2 px-4 rounded`
+
     return (<button
-        className={`${color ? `bg-[${color}]` : 'bg-green-600'} text-white py-2 px-4 rounded`}
+        className={css}
         onClick={() => { if (oC) oC() }}>
         {children}
     </button>)

@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import ModalLayout from "../../components/modal_layout"
 import { questionOnInteract } from "../../redux/selectors/counsellorSelector"
-import { getQuestionById, responseQuestion } from "../../service/counsellor_service/counsellorQuestionService"
+import { getQuestionById, privateResponse, responseQuestion } from "../../service/counsellor_service/counsellorQuestionService"
 import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
 import { useEffect, useState } from "react"
 import { dateFormat } from "../../utils/string"
@@ -10,7 +10,7 @@ import 'react-quill/dist/quill.snow.css';
 import { getDepList } from "../../service/admin_service/adminUserService"
 
 
-const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
+const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange }) => {
 
     const dispatch = useDispatch()
     const questionId = useSelector(questionOnInteract)
@@ -19,11 +19,12 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
     const [depList, setDepList] = useState([])
     const [showResponse, setShowResponse] = useState(false)
     const [showForwardOptions, setShowForwardOption] = useState(false)
+    const [showPrivate, setShowPrivate] = useState(false)
     const [content, setContent] = useState('')
+    const [privateMessage, setPrivateMessage] = useState('')
 
     useEffect(() => {
         getQuestionData()
-
     }, [])
 
     const getQuestionData = async () => {
@@ -33,7 +34,6 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
             const response = await getQuestionById(questionId)
             if (response.success) {
                 setQuestionData(response.data)
-                console.log(response.data);
             } else {
                 dispatch(errorMessage(response?.message ? response.message : 'Lỗi lấy câu hỏi'))
             }
@@ -54,7 +54,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
             if (response.success) {
                 setDepList(response.data)
             } else {
-                dispatch(errorMessage(response?.message ? response.message : 'Lỗi lấy danh sách phòng ban'))
+                dispatch(successMessage(response?.message ? response.message : 'Lỗi lấy danh sách phòng ban'))
             }
         } catch (error) {
             dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy danh sách phòng ban'))
@@ -79,7 +79,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
     }
 
     const forwardClick = async () => {
-        if(forwardDepId === '') {
+        if (forwardDepId === '') {
             dispatch(errorMessage('Chưa chọn khoa chuyển đến'))
             return
         }
@@ -94,10 +94,32 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
             console.log(error);
         }
     }
+
+    const handlePrivateResponse = async () => {
+        dispatch(showLoading())
+
+        try {
+            const data = { questionId, content: privateMessage }
+            const response = await privateResponse(data)
+            if (response.success) {
+                dispatch(successMessage(response?.message ? response.message : 'Đã phản hồi qua hộp thư'))
+                dataChange()
+                handleClose()
+            } else {
+                dispatch(errorMessage(response?.message ? response.message : 'Có lỗi xảy ra'))
+            }
+
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
+
+    }
     return <>
         <ModalLayout role='counsellor' handleClose={handleClose} title={'Trả lời câu hỏi'}>
-            <div className="text-[#2A2A2A] max-h-[700px] overflow-y-auto">
-                {!showResponse &&
+            <div className="text-[#2A2A2A] max-h-[700px] overflow-y-auto min-w-[400px] max-w-[550px]">
+                {!showResponse && !showPrivate &&
                     <div className="bg-white px-4 rounded-md shadow-md border  duration-500">
                         <h2 className="text-xl font-semibold mb-4">Thông tin người hỏi</h2>
                         <div className="mb-4">
@@ -117,10 +139,17 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
                     <p className="border border-[#DBD6A4] inline-block bg-[#E7E3B3] p-[2px] rounded-md text-xs">{questionData.fieldName}</p>
                     <div className="border-2 rounded-md mt-3 p-1 max-w-[700px]" dangerouslySetInnerHTML={{ __html: questionData.content }}></div>
                 </div>
-                {!showResponse && !showForwardOptions &&
+                {!showResponse && !showForwardOptions && !showPrivate &&
                     <div className="flex justify-end gap-1 mt-3  duration-500">
                         <button className={`px-4 py-2 bg-amber-600 hover:bg-amber-500 focus:border-amber-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                            onClick={() => { }}>Trả lời qua tin nhắn</button>
+                            onClick={() => {
+                                setShowPrivate(true)
+                                setPrivateMessage(`<p><strong>Câu hỏi của bạn đến khoa: "${questionData.departmentName}".
+                                    </strong></p><p><strong>Về lĩnh vực : "${questionData.fieldName}" .</strong></p>
+                                    <p><strong>Với nội dung: "${questionData.content}".</strong></p>
+                                    <p><strong>Đây là phản từ nhân viên hệ thống đến trực tiếp cho bạn về câu hỏi trên.</strong></p><p><br>
+                                    </p><p>Nội dung phản hồi:</p><p><br></p>`)
+                            }}>Trả lời qua tin nhắn</button>
                         <button className={`px-4 py-2 bg-blue-600 hover:bg-blue-500 focus:border-blue-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
                             onClick={() => {
                                 getDepListData()
@@ -150,6 +179,27 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward }) => {
                                 }}>Hủy</button>
                             <button className={`px-4 py-2 bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
                                 onClick={responseClick}>Đăng</button>
+                        </div>
+                    </div>
+                }
+                {showPrivate &&
+                    <div className="mt-4 duration-500">
+                        <p className="font-bold text-lg">Tạo tin nhắn:</p>
+                        <ReactQuill
+                            className=' bg-white'
+                            theme='snow'
+                            placeholder='Nội dung...'
+                            onChange={setPrivateMessage}
+                            value={privateMessage}
+                            modules={{ toolbar: false }}
+                        />
+                        <div className="flex justify-end gap-1 mt-3">
+                            <button className={`px-4 py-2 bg-red-600 hover:bg-red-500 focus:border-red-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
+                                onClick={() => {
+                                    setShowPrivate(false)
+                                }}>Hủy</button>
+                            <button className={`px-4 py-2 bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
+                                onClick={handlePrivateResponse}>Gửi</button>
                         </div>
                     </div>
                 }

@@ -34,6 +34,8 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import Profile from "./pages/user/Profile";
 import FaqsPage from "./pages/public/FaqsPage";
 import DepartmentHeadFaqs from "./pages/department_head/DepartmentHeadFaqs";
+import CounsellorFeedback from "./pages/counsellor/CounsellorFeedback";
+import UserMessage from "./pages/user/UserMessage";
 
 function App() {
   const dispatch = useDispatch()
@@ -112,11 +114,13 @@ function App() {
             <Route path="/counsellor" element={<CounsellorRoute />}>
               <Route path="home" element={<CounsellorHome />} />
               <Route path="questions" element={<CounsellorQuestion />} />
+              <Route path="feedback" element={<CounsellorFeedback />} />
             </Route>
 
             {/* userRoute */}
             <Route path="/user" element={<UserRoute />}>
               <Route path="home" element={<UserHome />} />
+              <Route path="message" element={<UserMessage />} />
               <Route path="question/create" element={<UserCreateQuestion />} />
             </Route>
 

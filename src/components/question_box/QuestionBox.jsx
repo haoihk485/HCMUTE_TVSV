@@ -1,8 +1,6 @@
 
 import bg from '../../assets/image/blank_avt.png'
-import { increaseView } from '../../service/counsellor_service/counsellorQuestionService';
 import { dateFormat } from '../../utils/string';
-import { useNavigate } from 'react-router-dom';
 
 const QuestionBox = ({ question, handleQuestionClick }) => {
 

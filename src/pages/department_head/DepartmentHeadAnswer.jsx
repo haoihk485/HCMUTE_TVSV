@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux"
 import Filter from "../../components/filter"
 import StaffModuleHeader from "../../components/staff_module_header/StaffModuleHeader"
 import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
-import { acceptAnswer, getWaitingAnswer } from "../../service/dephead_service/depAnswerService"
+import { acceptAnswer, getWaitingAnswer, refuseAnswer } from "../../service/dephead_service/depAnswerService"
 import { useEffect, useState } from "react"
 import Table from "../../components/table"
 import { depHAnswerList, depHAnswerListPages } from "../../redux/selectors/depHeadSelector"
@@ -77,6 +77,28 @@ const DepartmentHeadAnswer = () => {
         }
     }
 
+    const handleRefuseAnswer = async (data) => {
+        if (!data?.id) return
+        dispatch(showLoading())
+
+        try {
+            const response = await refuseAnswer(data)
+            if (response.success) {
+                dispatch(successMessage(response?.message ? response.message : 'Từ chối câu trả lời thành công'))
+                getWaitingAnswerData()
+                setTimeout(() => {
+                    setShowDetailAnswer(false)
+                }, 1000)
+            } else {
+                dispatch(errorMessage(response?.message ? response.message : 'Có lỗi xảy ra'))
+            }
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
+    }
+
     const getDepField = async () => {
         dispatch(showLoading())
 
@@ -101,7 +123,8 @@ const DepartmentHeadAnswer = () => {
             {showDetailAnswer &&
                 <WatingAnswerModal
                     handleClose={() => setShowDetailAnswer(false)}
-                    handleAcceptAnswer={handleAcceptAnswer} />}
+                    handleAcceptAnswer={handleAcceptAnswer}
+                    handleRefuseAnswer={handleRefuseAnswer} />}
             <div className='container w-[95%] my-5 mx-auto'>
                 <StaffModuleHeader role={'departmentHead'} moduleTitle={'Duyệt câu trả lời'} />
                 <div className="grid grid-cols-1 lg:grid-cols-2 my-4">
@@ -109,7 +132,7 @@ const DepartmentHeadAnswer = () => {
 
                     </div>
                     <div className="flex justify-start lg:justify-end space-x-4">
-                        <Filter data={[{ key: 'Tất cả', value: '' }, ...fieldFilterOptions]} params={params} setParams={setParams} name={'value'} />
+                        <Filter data={[{ key: 'Tất cả', value: '' }, ...fieldFilterOptions]} params={params} setParams={setParams} name={'fieldId'} />
                     </div>
                 </div>
                 <Table

@@ -4,9 +4,14 @@ body {
 }
 
 .ql-container {
-    min-height: 200px;
+    /* max-height: 200px; */
 }
 
 .accordion {
     @apply max-w-[600px] mx-auto
+}
+
+.ql-container.ql-snow {
+    border: none !important;
+    background-color: #fff;
 }

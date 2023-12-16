@@ -21,8 +21,16 @@ const acceptAnswer = (id) => {
     })
 }
 
+const refuseAnswer = (data) => {
+    return API.delete(`/department-head/answers/${data.id}`, {
+        headers: authHeader(getCookieByName('accessToken')),
+        data: data.data
+    })
+}
+
 export {
     getWaitingAnswer,
     getWaitingAnswerById,
-    acceptAnswer
+    acceptAnswer,
+    refuseAnswer
 }

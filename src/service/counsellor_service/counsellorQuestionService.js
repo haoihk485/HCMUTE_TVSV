@@ -40,6 +40,12 @@ const responseQuestion = (data) => {
     })
 }
 
+const privateResponse = (data) => {
+    return API.post('/staff/messages', data, {
+        headers: authHeader(getCookieByName('accessToken'))
+    })
+}
+
 const forwardQuestion = (data) => {
     return API.patch(`/staff/questions/${data.questionId}/departments/${data.departmentId}`, {}, {
         headers: authHeader(getCookieByName('accessToken'))
@@ -61,5 +67,6 @@ export {
     forwardQuestion,
     depHGetQuestionList,
     increaseView,
-    getFAQs
+    getFAQs,
+    privateResponse
 }

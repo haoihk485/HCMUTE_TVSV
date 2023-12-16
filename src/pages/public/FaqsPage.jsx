@@ -77,7 +77,7 @@ const FaqsPage = () => {
         <div className="bg-white h-[80vh] w-[60%] mx-auto p-8">
             <h1 class="text-3xl font-bold mb-4 ">Frequently Asked Questions</h1>
             <div className="w-full flex mb-4 ">
-                {/* <Filter name='department' params={params} setParams={setParams} data={[{ key: 'Tất cả khoa', value: 'all' }, ...depList]} /> */}
+                <Filter name='departmentId' params={params} setParams={setParams} data={[{ key: 'Tất cả khoa', value: 'all' }, ...depList]} />
             </div>
             {
                 faqList.map((faq) => {

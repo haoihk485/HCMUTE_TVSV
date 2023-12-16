@@ -123,6 +123,7 @@ const CounsellorQuestion = () => {
         <>{showResponseModal &&
             <ResponseModal
                 handleClose={() => setShowResponseModal(false)}
+                dataChange={getQuestionData}
                 handleResponse={handleResponse}
                 handleForward={handleForward} />
         }
