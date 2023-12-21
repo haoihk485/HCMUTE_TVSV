@@ -2,11 +2,15 @@ import { useState } from "react";
 import ModalLayout from "../../components/modal_layout"
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
+import { depHAddFieldDep } from "../../service/dephead_service/depFieldService";
+import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice";
+import { useDispatch } from "react-redux";
 
 
 
-const MultiFieldsAddModal = ({ handleClose, initFieldList, toggle, handleAddFields }) => {
+const MultiFieldsAddModal = ({ handleClose, initFieldList, toggle }) => {
 
+    const dispatch = useDispatch()
     const [remainField, setRemainField] = useState(initFieldList ? initFieldList : [])
     const [chooseField, setChooseField] = useState([]);
 
@@ -30,12 +34,22 @@ const MultiFieldsAddModal = ({ handleClose, initFieldList, toggle, handleAddFiel
         )
     }
 
-    const handleAdd = async () => {
-        const data = chooseField.map(field => field.id);
-        console.log(data);
-        handleAddFields(data)
-        setChooseField([])
+    const handleAddField = async () => {
+        if (chooseField.length === 0) return
+
+        dispatch(showLoading())
+        try {
+            const data = chooseField.map(field => field.id);
+            const response = await depHAddFieldDep({ ids: data })
+            dispatch(successMessage(response?.message ? response.message : 'Thêm lĩnh vực thành công'))
+            setChooseField([])
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Lỗi xảy ra (DepField)'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
+
 
     return (
         <ModalLayout handleClose={handleClose} title={'Thêm lĩnh vực'}>
@@ -81,7 +95,7 @@ const MultiFieldsAddModal = ({ handleClose, initFieldList, toggle, handleAddFiel
                 >Hủy</button>}
                 <button
                     className={`px-4 py-2  text-white rounded-md focus:outline-none ${(chooseField.length === 0) ? 'bg-gray-400 cursor-default' : 'bg-green-500 focus:ring hover:bg-green-600 focus:border-green-300'} duration-500`}
-                    onClick={() => { handleAdd() }}
+                    onClick={handleAddField}
                 >Thêm</button>
             </div>
         </ModalLayout>

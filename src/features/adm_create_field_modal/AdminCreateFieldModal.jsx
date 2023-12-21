@@ -1,8 +1,10 @@
 import { useDispatch } from "react-redux"
 import ModalLayout from "../../components/modal_layout"
 import { useState } from "react"
+import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
+import { createField } from "../../service/admin_service/adminFieldService"
 
-const AdminCreateFieldModal = ({ handleClose, createField }) => {
+const AdminCreateFieldModal = ({ handleClose, dataOnchange }) => {
 
 
     const dispatch = useDispatch()
@@ -15,11 +17,23 @@ const AdminCreateFieldModal = ({ handleClose, createField }) => {
         setFieldInfo({ name: e.target.value })
     }
 
-    const handleCreate = async () => {
-        await createField(fieldInfo)
-        setFieldInfo({
-            name: ''
-        })
+
+    const handleCreateField = async () => {
+        if (fieldInfo.name === '') {
+            dispatch(errorMessage('Tên lĩnh vực không được để trống'))
+            return
+        }
+        dispatch(showLoading())
+        try {
+            const response = await createField(fieldInfo)
+            dispatch(successMessage(response?.message ? response.message : 'Thêm lĩnh vực thành công'))
+            dataOnchange()
+            setFieldInfo({ name: '' })
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại AdminField'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
 
     return (
@@ -38,8 +52,8 @@ const AdminCreateFieldModal = ({ handleClose, createField }) => {
                 </div>
 
                 <div className="flex items-center justify-end">
-                    <button className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500 focus:outline-none focus:ring focus:border-green-300 duration-500"
-                        onClick={() => handleCreate()}>Thêm</button>
+                    <button className={`px-4 py-2  text-white rounded-md duration-500 ${fieldInfo.name === '' ? 'bg-gray-300 cursor-default' : 'bg-green-600 hover:bg-green-500 focus:outline-none focus:ring focus:border-green-300 cursor-pointer'}`}
+                        onClick={() => handleCreateField()}>Thêm</button>
                 </div>
             </div>
         </ModalLayout>

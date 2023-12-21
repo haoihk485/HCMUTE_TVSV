@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import ModalLayout from '../../components/modal_layout'
 import { useDispatch } from 'react-redux'
-import { errorMessage } from '../../redux/slices/commonSlice'
+import { errorMessage, hideLoading, showLoading, successMessage } from '../../redux/slices/commonSlice'
+import { createDep } from '../../service/admin_service/adminDepService'
 
-const AdminCreateDepModal = ({ handleClose, handleCreateDep }) => {
+const AdminCreateDepModal = ({ handleClose, dataOnchange }) => {
     const dispatch = useDispatch()
 
     const initDepInfor = {
@@ -19,21 +20,33 @@ const AdminCreateDepModal = ({ handleClose, handleCreateDep }) => {
         })
     }
 
-    const handleCreateClick = () => {
+
+    const handleCreateDep = async () => {
+
         if (depInfor.name === '' || depInfor.description === '') {
-            dispatch(errorMessage('Tên và miêu tả phòng ban không được để trống'))
+            dispatch(errorMessage('Tên và miêu tả khoa không được để trống'))
             return
         }
-        handleCreateDep(depInfor)
-        setDepInfor(initDepInfor)
+
+        dispatch(showLoading())
+        try {
+            const response = await createDep(depInfor)
+            dispatch(successMessage(response?.message || 'Thêm khoa thành công'))
+            setDepInfor(initDepInfor)
+            dataOnchange()
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại AdminDepartment'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
 
     return (
         <>
-            <ModalLayout handleClose={handleClose} title={'Thêm phòng ban'}>
+            <ModalLayout handleClose={handleClose} title={'Thêm khoa'}>
                 <div>
                     <div className="mb-4 font-roboto">
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-600 font-roboto">Tên phòng ban</label>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-600 font-roboto">Tên khoa</label>
                         <input
                             type="text"
                             id='name'
@@ -58,7 +71,7 @@ const AdminCreateDepModal = ({ handleClose, handleCreateDep }) => {
 
                     <div className="flex items-center justify-end">
                         <button className="px-4 py-2 duration-500 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring focus:border-green-300"
-                            onClick={() => handleCreateClick()}>Thêm</button>
+                            onClick={() => handleCreateDep()}>Thêm</button>
                     </div>
                 </div>
             </ModalLayout>

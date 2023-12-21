@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router';
 import PaginationParams from '../../components/pagination_params/PaginationParams';
 import { useSearchParams } from 'react-router-dom';
 import { increaseView } from '../../service/counsellor_service/counsellorQuestionService';
+import Loading from '../../components/loading_component/Loading';
 
 
 const HomeContent = () => {
@@ -26,13 +27,13 @@ const HomeContent = () => {
 
     const currPage = searchParams.get('page') ? Number(searchParams.get('page')) : 0
 
-    const initParams = { size: 10, page: currPage }
-
-
+    const initParams = { size: 5, page: currPage }
 
     const [params, setParams] = useState(initParams)
     const questions = useSelector(questionList)
     const [depList, setDepList] = useState([])
+    const [title, setTitle] = useState('Tất cả khoa')
+    const [isLoad, setIsLoad] = useState(false)
 
     useEffect(() => {
         getQuestionData()
@@ -42,7 +43,7 @@ const HomeContent = () => {
     }, [params])
 
     const getQuestionData = async () => {
-        dispatch(showLoading())
+        setIsLoad(true)
 
         try {
             const response = await getQuestionList(params)
@@ -55,34 +56,25 @@ const HomeContent = () => {
         } catch (error) {
             dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy dữ liệu'))
         } finally {
-            dispatch(hideLoading())
+            setIsLoad(false)
         }
     }
 
     const getDepListData = async () => {
-        dispatch(showLoading())
-
         try {
             const response = await getDepList()
-            if (response.success) {
-                setDepList(response.data)
-            } else {
-                dispatch(errorMessage(response?.message ? response.message : 'Lỗi lấy dữ liệu'))
-            }
+            setDepList(response.data)
         } catch (error) {
             dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy dữ liệu'))
-        } finally {
-            dispatch(hideLoading())
         }
     }
 
     const handleDepFilter = (id) => {
-
+        if (params.departmentId === id) return
         if (!params?.departmentId && id === '') return
         else if (params?.departmentId && id === '') {
             setParams(Object.fromEntries(Object.entries(params).filter(([key, value]) => key !== 'departmentId')))
             setSearchParams({ page: 0 })
-
         } else {
             setParams({ ...params, departmentId: id })
             setSearchParams({ page: 0 })
@@ -90,13 +82,11 @@ const HomeContent = () => {
     }
 
     const handleQuestionClick = async (id) => {
-        dispatch(showLoading())
         try {
             await increaseView(id)
         } catch (error) {
 
         } finally {
-            dispatch(hideLoading())
             navigate(`/question/${id}`)
         }
     }
@@ -104,50 +94,62 @@ const HomeContent = () => {
     return (
         <>
             <div className="grid grid-cols-4 w-[95%] mx-auto gap-2 my-3">
-                <div className="border rounded-lg p-1 pl-3 col-span-4 flex items-center text-white bg-dark_blue">
+                <div className="border rounded-t-lg p-1 pl-3 col-span-4 flex items-center text-white bg-dark_blue/80">
                     <HomeIcon />
                     <ChevronRightIcon />
                     <p className='inline-block text-lg font-bold'>Hỏi đáp</p>
                 </div>
-                <div className="border col-span-3 overflow-hidden bg-white">
-                    <div className='w-full bg-[#eee] flex justify-between'>
-                        <p className='bg-white w-fit p-2 font-semibold'>Tất cả</p>
-                        {/* <Filter /> */}
+                <div className="col-span-3">
+                    <div className='w-full bg-[#EEEEEE] flex justify-between '>
+                        <p className='w-fit p-2 font-bold rounded-t-lg px-10 border-b text-white bg-dark_blue/80'>{title}</p>
                     </div>
-                    {
-                        questions.map((ques, i) => {
-                            return <QuestionBox key={i} question={ques} handleQuestionClick={handleQuestionClick} />
-                        })
-                    }{
-                        questions.length === 0 &&
-                        <div className='flex justify-center text-gray-600 p-8 border mt-3 rounded-md font-bold text-xl'>
-                            Chưa có câu hỏi nào!!
+                    <div className='bg-white rounded-r-lg rounded-b-lg shadow-lg border border-dark_blue/30'>
+                        {
+                            isLoad ?
+                                <Loading />
+                                :
+                                (questions.length === 0) ?
+                                    <div className='flex justify-center text-gray-600 py-24 mt-3 rounded-md font-bold text-xl'>
+                                        Chưa có câu hỏi nào!!
+                                    </div>
+                                    :
+                                    questions.map((ques, i) => {
+                                        return <QuestionBox key={i} question={ques} handleQuestionClick={handleQuestionClick} />
+                                    })
+                        }
+                        <div className='w-full flex py-5'>
+                            <PaginationParams params={params} setParams={setParams} totalPage={totalPage} />
                         </div>
-                    }
-                    <div className='w-full flex my-5'>
-                        <PaginationParams params={params} setParams={setParams} totalPage={totalPage} />
                     </div>
                 </div>
-                <div className="border overflow-hidden bg-white h-fit">
-                    <div className='w-full bg-[#eee] flex justify-between'>
-                        <p className='bg-white w-fit p-2 font-semibold'>Khoa</p>
+                <div className="h-fit ">
+                    <div className='w-full bg-[#eee] flex justify-between rounded-t-lg'>
+                        <p className='bg-white w-fit p-2 font-semibold px-5  rounded-t-lg border-b text-white bg-dark_blue/80'>Khoa</p>
                     </div>
-                    <div className='h-[373px] overflow-y-auto'>
-                        <div
-                            className={`p-1 mb-[2px] text-sm font-bold text-[#2A2A2A] border-b w-full px-2 cursor-pointer hover:bg-[#d8e8f5] duration-300 py-2 ${(!params.departmentId) ? 'bg-[#d8e8f5]' : ''}`}
-                            onClick={() => handleDepFilter('')}>
-                            Tất cả khoa
+                    <div className='rounded-r-lg overflow-hidden border shadow-lg border-dark_blue/30 rounded-b-lg'>
+                        <div className='h-[366px] bg-white overflow-y-auto rounded-r-lg  '>
+                            <div
+                                className={`p-1 mb-[2px] text-sm font-bold border-b w-full px-2 cursor-pointer hover:bg-[#d8e8f5] duration-300 py-2 text-gray-600 ${(!params.departmentId) ? 'bg-[#d8e8f5]' : ''}`}
+                                onClick={() => {
+                                    handleDepFilter('')
+                                    setTitle('Tất cả khoa')
+                                }}>
+                                Tất cả khoa
+                            </div>
+                            {depList.map((dep, i) => {
+                                return (
+                                    <div
+                                        key={dep.id}
+                                        className={`p-1 mb-[2px] text-sm font-bold text-gray-600 border-b w-full px-2 cursor-pointer hover:bg-[#d8e8f5] duration-300 py-2 ${(params.departmentId === dep.id) ? 'bg-[#d8e8f5]' : ''}`}
+                                        onClick={() => {
+                                            handleDepFilter(dep.id)
+                                            setTitle(dep.name)
+                                        }}>
+                                        {dep.name}
+                                    </div>
+                                )
+                            })}
                         </div>
-                        {depList.map((dep, i) => {
-                            return (
-                                <div
-                                    key={dep.id}
-                                    className={`p-1 mb-[2px] text-sm font-bold text-[#2A2A2A] border-b w-full px-2 cursor-pointer hover:bg-[#d8e8f5] duration-300 py-2 ${(params.departmentId === dep.id) ? 'bg-[#d8e8f5]' : ''}`}
-                                    onClick={() => handleDepFilter(dep.id)}>
-                                    {dep.name}
-                                </div>
-                            )
-                        })}
                     </div>
                 </div>
             </div>

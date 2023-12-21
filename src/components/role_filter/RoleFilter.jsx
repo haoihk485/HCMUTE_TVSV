@@ -4,7 +4,7 @@ const RoleFilter = ({ handleFilter }) => {
             <option value="">Role</option>
             <option value="counsellor">Tư vấn viên</option>
             <option value="user">Người dùng</option>
-            <option value="departmentHead">Trưởng phòng ban</option>
+            <option value="departmentHead">Trưởng khoa</option>
             <option value="supervisor">Giám sát viên</option>
         </select>
     )

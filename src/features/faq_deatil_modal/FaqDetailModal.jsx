@@ -36,7 +36,7 @@ const FaqDetailModal = ({ handleClose, faq, dataChange }) => {
                 id: faq.id, data: faqData
             })
             if (response.success) {
-                dispatch(successMessage(response.message ? response.message : 'Cập nhật phòng ban thành công'))
+                dispatch(successMessage(response.message ? response.message : 'Cập nhật khoa thành công'))
                 dataChange()
                 setOnEdit(false)
             } else {

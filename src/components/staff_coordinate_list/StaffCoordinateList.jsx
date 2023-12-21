@@ -19,7 +19,7 @@ const StaffCoordinateList = ({ staffList, handleButtonClick }) => {
                                         <img src={blankAvt} alt={staff?.name ? staff.name : ''} className="w-12 h-12 rounded-md mr-4" />
                                         <div className='flex justify-between w-full'>
                                             <div>
-                                                <h3 className="text-md font-semibold">{staff?.name ? staff.name : 'Chưa có trưởng phòng ban'}</h3>
+                                                <h3 className="text-md font-semibold">{staff?.name ? staff.name : 'Chưa có trưởng khoa'}</h3>
                                                 <p className="text-gray-500 text-sm">{staff?.email ? staff.email : ''}</p>
                                             </div>
                                             {<button

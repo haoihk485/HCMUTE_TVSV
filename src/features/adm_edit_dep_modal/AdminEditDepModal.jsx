@@ -1,11 +1,11 @@
 import ModalLayout from "../../components/modal_layout"
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { errorMessage, hideLoading, showLoading } from '../../redux/slices/commonSlice'
+import { errorMessage, hideLoading, showLoading, successMessage } from '../../redux/slices/commonSlice'
 import { admInteractingDepId } from "../../redux/selectors/adminSelector"
-import { getDepById } from "../../service/admin_service/adminDepService"
+import { getDepById, updateDep } from "../../service/admin_service/adminDepService"
 
-const AdminEditDepModal = ({ handleClose, handleEditDep }) => {
+const AdminEditDepModal = ({ handleClose, dataOnchange }) => {
 
     const dispatch = useDispatch()
 
@@ -44,22 +44,35 @@ const AdminEditDepModal = ({ handleClose, handleEditDep }) => {
                 })
             }
         } catch (error) {
-            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại AdmEditDepModal'))
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
         } finally {
             dispatch(hideLoading())
         }
     }
 
-    const handleEditClick = () => {
+
+    const handleEditDep = async () => {
         if (!onInteract) return
-        handleEditDep({ id: depId, data: depInfor })
-        setOnInteract(false)
+
+        dispatch(showLoading())
+        try {
+            const data = { id: depId, data: depInfor }
+            const response = await updateDep(data)
+            dispatch(successMessage(response?.message ? response.message : 'Chỉnh sửa khoa thành công'))
+            dataOnchange()
+            setOnInteract(false)
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại AdminDepartment'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
+
     return (
-        <ModalLayout handleClose={handleClose} title={'Cập nhật thông tin phòng ban'}>
+        <ModalLayout handleClose={handleClose} title={'Cập nhật thông tin khoa'}>
             <div>
                 <div className="mb-4 font-roboto">
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-600 font-roboto">Tên phòng ban</label>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-600 font-roboto">Tên khoa</label>
                     <input
                         type="text"
                         id='name'
@@ -89,7 +102,7 @@ const AdminEditDepModal = ({ handleClose, handleEditDep }) => {
                             setOnInteract(!onInteract)
                         }}>Hủy</button>
                     <button className={`px-4 py-2 duration-500 ${onInteract ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 cursor-default'} text-white rounded-md  focus:outline-none focus:ring focus:border-yellow-300`}
-                        onClick={() => handleEditClick()}>Chỉnh sửa</button>
+                        onClick={() => handleEditDep()}>Chỉnh sửa</button>
                 </div>
             </div>
         </ModalLayout>

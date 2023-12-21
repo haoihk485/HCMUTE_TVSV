@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ModalLayout from '../../components/modal_layout';
+import { errorMessage, hideLoading, showLoading, successMessage } from '../../redux/slices/commonSlice';
+import { useDispatch } from 'react-redux';
+import { createStaff } from '../../service/admin_service/adminUserService';
 
-const AdminAddStaffModal = ({ handleClose, handleAdd }) => {
+const AdminAddStaffModal = ({ handleClose, onDataChange }) => {
+    const dispatch = useDispatch()
 
     const [onInteract, setOnInteract] = useState(false)
+    const [trueData, setTrueData] = useState(false)
 
     const initUserInfor = {
         name: '',
@@ -14,17 +19,40 @@ const AdminAddStaffModal = ({ handleClose, handleAdd }) => {
     }
     const [userInfor, setUserInfor] = useState(initUserInfor)
 
+    useEffect(() => {
+        setTrueData(!includeEmtyData())
+    }, [userInfor])
+
     const handleInputChange = (e) => {
-        if (!onInteract) setOnInteract(true)
         setUserInfor({
             ...userInfor,
             [e.target.name]: e.target.value
         })
     }
 
-    const handleAddClick = () => {
-        if (!onInteract) return
-        handleAdd(userInfor)
+    const includeEmtyData = () => {
+        if (userInfor.name === '' ||
+            userInfor.email === '' ||
+            userInfor.phone === '' ||
+            userInfor.password === '') {
+            return true
+        } else
+            return false
+    }
+
+    const handleCreateStaff = async () => {
+        if (includeEmtyData()) return
+
+        dispatch(showLoading())
+        try {
+            const response = await createStaff(userInfor)
+            dispatch(successMessage('Thêm mới nhân viên thành công!'));
+            onDataChange()
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
 
     return (
@@ -90,7 +118,7 @@ const AdminAddStaffModal = ({ handleClose, handleAdd }) => {
                 <div className='flex w-full justify-end'>
 
                     {
-                        onInteract &&
+                        trueData &&
                         <div className="flex items-center justify-end mr-3">
                             <button className={`px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-500 focus:outline-none focus:ring focus:border-green-300 duration-500`}
                                 onClick={() => {
@@ -100,8 +128,8 @@ const AdminAddStaffModal = ({ handleClose, handleAdd }) => {
                         </div>
                     }
                     <div className="flex items-center justify-end">
-                        <button className={`px-4 py-2 ${onInteract ? 'bg-green-600 hover:bg-green-500 focus:border-green-300' : 'bg-gray-400 cursor-default'} text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                            onClick={() => handleAddClick()}>Thêm</button>
+                        <button className={`px-4 py-2 ${trueData ? 'bg-green-600 hover:bg-green-500 focus:border-green-300' : 'bg-gray-400 cursor-default'} text-white rounded-md  focus:outline-none focus:ring duration-500`}
+                            onClick={handleCreateStaff}>Thêm</button>
                     </div>
                 </div>
             </div>

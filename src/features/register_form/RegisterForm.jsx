@@ -1,7 +1,12 @@
 import { useState } from "react"
 import validator from "validator"
+import { regsiter } from "../../service/auth_service/authenticate"
+import { useDispatch } from "react-redux"
+import { errorMessage, successMessage } from "../../redux/slices/commonSlice"
 
-const RegisterForm = ({ handleRegister, toggle }) => {
+const RegisterForm = ({ toggle }) => {
+
+    const dispatch = useDispatch()
 
     const initInfor = {
         phone: '', password: '', email: '', name: '', occupation: 'Sinh Viên'
@@ -9,6 +14,8 @@ const RegisterForm = ({ handleRegister, toggle }) => {
     const [registerInfor, setregisterInfor] = useState(initInfor)
 
     const [error, setError] = useState({ ...initInfor, repassword: '' })
+
+    const [isLoad, setIsLoad] = useState(false)
 
     const handleInputOnChange = (e) => {
         setregisterInfor({
@@ -98,6 +105,34 @@ const RegisterForm = ({ handleRegister, toggle }) => {
         }
     }
 
+
+    const handleRegister = async () => {
+
+        if (!phoneValidate() ||
+            !emailValidate() ||
+            !nameValidate() ||
+            !passwordValidate() ||
+            !repasswordValidate()) {
+            return
+        }
+        if (isLoad) return
+
+        setIsLoad(true)
+        try {
+            const res = await regsiter(registerInfor)
+            dispatch(successMessage('Tạo tài khoản thành công'))
+            toggle(1)
+            setregisterInfor(initInfor)
+            setRepassword('')
+        } catch (error) {
+            dispatch(errorMessage(error.message))
+        }
+        finally {
+            setIsLoad(false)
+        }
+
+    }
+
     return (
         <div className="flex justify-center flex-col mt-56 mb-10 md:my-0">
             <h2 className="text-3xl font-semibold mb-4 text-[#332370] font-roboto md:ml-3 ml-0 inline-block">
@@ -124,8 +159,8 @@ const RegisterForm = ({ handleRegister, toggle }) => {
                             name="email"
                             className="mt-1 p-2 w-full rounded-md border-2 border-primary text-sm"
                             onChange={e => handleInputOnChange(e)}
-                            onBlur={() => emailValidate()} 
-                            value={registerInfor.email}/>
+                            onBlur={() => emailValidate()}
+                            value={registerInfor.email} />
                         {(error.email !== '') && <p className="inline-block text-xs text-red-500">{error.email}</p>}
                     </div>
                     <div className={`${(error.name === '') ? "mb-6" : ""}`}>
@@ -135,8 +170,8 @@ const RegisterForm = ({ handleRegister, toggle }) => {
                             name="name"
                             className="mt-1 p-2 w-full rounded-md border-2 border-primary text-sm"
                             onChange={e => handleInputOnChange(e)}
-                            onBlur={() => nameValidate()} 
-                            value={registerInfor.name}/>
+                            onBlur={() => nameValidate()}
+                            value={registerInfor.name} />
                         {(error.name !== '') && <p className="inline-block text-xs text-red-500">{error.name}</p>}
                     </div>
                 </div>
@@ -163,8 +198,8 @@ const RegisterForm = ({ handleRegister, toggle }) => {
                             name="password"
                             className="mt-1 p-2 w-full rounded-md border-2 border-primary text-sm"
                             onChange={e => handleInputOnChange(e)}
-                            onBlur={() => passwordValidate()} 
-                            value={registerInfor.password}/>
+                            onBlur={() => passwordValidate()}
+                            value={registerInfor.password} />
                         {(error.password !== '') && <p className="inline-block text-xs text-red-500">{error.password}</p>}
                     </div>
                     <div className={`${(error.repassword === '') ? "mb-6" : ""}`}>
@@ -174,8 +209,8 @@ const RegisterForm = ({ handleRegister, toggle }) => {
                             name="repassword"
                             className="mt-1 p-2 w-full rounded-md border-2 border-primary text-sm"
                             onChange={e => setRepassword(e.target.value)}
-                            onBlur={() => repasswordValidate()} 
-                            value={repassword}/>
+                            onBlur={() => repasswordValidate()}
+                            value={repassword} />
                         {(error.repassword !== '') && <p className="inline-block text-xs text-red-500">{error.repassword}</p>}
                     </div>
                 </div>

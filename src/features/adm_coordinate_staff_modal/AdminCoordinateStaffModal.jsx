@@ -3,21 +3,21 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import SearchIcon from '@mui/icons-material/Search';
 import { errorMessage, hideLoading, showLoading, successMessage } from '../../redux/slices/commonSlice';
-import { getDepList, getNewCounsellor } from '../../service/admin_service/adminUserService';
+import { coordinateUser, getDepList, getNewCounsellor } from '../../service/admin_service/adminUserService';
 import SearchBar from '../../components/search_bar/SearchBar';
 import StaffCoordinateList from '../../components/staff_coordinate_list/StaffCoordinateList';
 import Pagination from '../../components/pagination';
 import { removeAccents } from '../../utils/string';
 import ModalLayout from '../../components/modal_layout/ModalLayout';
 
-const AdminCoordinateStaffModal = ({ handleClose, handleCoordinateUser }) => {
+const AdminCoordinateStaffModal = ({ handleClose, onDataChange }) => {
 
     const dispatch = useDispatch()
 
     const initUpdateInfor = {
         userId: '',
         depId: '',
-        depName: 'Chọn phòng ban'
+        depName: 'Chọn khoa'
     }
     const initParams = {
         page: 0,
@@ -88,16 +88,32 @@ const AdminCoordinateStaffModal = ({ handleClose, handleCoordinateUser }) => {
         }
     }
 
-    const handleButtonClick = async (staffId) => {
-        if (updateInfor.depId !== '') {
-            await handleCoordinateUser({
+    const handleCoordinateUser = async (staffId) => {
+        if (updateInfor.depId === '') {
+            dispatch(errorMessage('Chưa chọn khoa'))
+            return
+        }
+
+        if (!confirm('Chuyển người dùng vào khoa ?')) return
+
+        dispatch(showLoading())
+
+        try {
+            const data = {
                 depId: updateInfor.depId,
                 userId: staffId
-            })
+            }
+            const res = await coordinateUser(data)
+            dispatch(successMessage(res.message || 'Thêm người dùng vào khoa thành công'))
             getDepData()
-        } else
-            dispatch(errorMessage('Chưa chọn phòng ban'))
+        } catch (error) {
+            console.log('catch');
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại CoordinateModal'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
+
 
 
 
@@ -106,7 +122,7 @@ const AdminCoordinateStaffModal = ({ handleClose, handleCoordinateUser }) => {
         <ModalLayout handleClose={handleClose} title={'Phân phối nhân sự'}>
             <div>
                 <div className="mb-4 font-roboto">
-                    <label htmlFor="name" className="block text-xl font-bold mb-4 font-roboto">Chọn phòng ban</label>
+                    <label htmlFor="name" className="block text-xl font-bold mb-4 font-roboto">Chọn khoa</label>
                     <div className='relative'>
                         <input
                             type="text"
@@ -126,10 +142,10 @@ const AdminCoordinateStaffModal = ({ handleClose, handleCoordinateUser }) => {
                     </div>
                 </div>
 
-                <SearchBar params={params} setParams={setParams}/>
+                <SearchBar params={params} setParams={setParams} />
 
                 <div className="mb-4">
-                    <StaffCoordinateList staffList={userList} handleButtonClick={handleButtonClick} />
+                    <StaffCoordinateList staffList={userList} handleButtonClick={handleCoordinateUser} />
                 </div>
 
                 <Pagination

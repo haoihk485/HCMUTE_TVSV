@@ -1,9 +1,16 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import ModalLayout from "../../components/modal_layout"
+import { useDispatch } from "react-redux"
+import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
+import { createCounsellor } from "../../service/dephead_service/depCounsellorService"
 
-const DepHeadCreateCounsellor = ({ handleClose, createCoun }) => {
+const DepHeadCreateCounsellor = ({ handleClose, onDataChange }) => {
 
     const [onInteract, setOnInteract] = useState(false)
+
+    const dispatch = useDispatch()
+
+
 
     const initUserInfor = {
         name: '',
@@ -14,18 +21,35 @@ const DepHeadCreateCounsellor = ({ handleClose, createCoun }) => {
     }
     const [userInfor, setUserInfor] = useState(initUserInfor)
 
+    useEffect(() => {
+        if (userInfor.name === '' || userInfor.email === '' || userInfor.phone === '' || userInfor.password === '') {
+            setOnInteract(false)
+        } else
+            setOnInteract(true)
+    }, [userInfor])
+
     const handleInputChange = (e) => {
-        if (!onInteract) setOnInteract(true)
         setUserInfor({
             ...userInfor,
             [e.target.name]: e.target.value
         })
     }
 
-    const handleAddClick = () => {
+    const createCounhandle = async () => {
         if (!onInteract) return
-        createCoun(userInfor)
+
+        dispatch(showLoading())
+        try {
+            const response = await createCounsellor(userInfor)
+            dispatch(successMessage(response?.message ? response.message : 'Thêm tư vấn viên thành công'))
+            onDataChange()
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra tại DepUser'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
+
 
     return (
         <ModalLayout handleClose={handleClose} title={'Thêm tư vấn viên'}>
@@ -89,7 +113,7 @@ const DepHeadCreateCounsellor = ({ handleClose, createCoun }) => {
                     }
                     <div className="flex items-center justify-end">
                         <button className={`px-4 py-2 ${onInteract ? 'bg-green-600 hover:bg-green-500 focus:border-green-300' : 'bg-gray-400 cursor-default'} text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                            onClick={() => handleAddClick()}>Thêm</button>
+                            onClick={createCounhandle}>Thêm</button>
                     </div>
                 </div>
             </div>

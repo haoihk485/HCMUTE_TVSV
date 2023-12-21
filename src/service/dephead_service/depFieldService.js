@@ -24,7 +24,6 @@ const depHGetFieldNotInDep = () => {
 }
 
 const depHAddFieldDep = (data) => {
-
     return API.post('/department-head/fields', data, {
         headers: authHeader(getCookieByName('accessToken'))
     })

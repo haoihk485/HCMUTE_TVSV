@@ -1,13 +1,13 @@
 import { useDispatch, useSelector } from "react-redux"
 import ModalLayout from "../../components/modal_layout"
 import { depHInteractingAnswer } from "../../redux/selectors/depHeadSelector"
-import { hideLoading, showLoading } from "../../redux/slices/commonSlice"
-import { acceptAnswer, getWaitingAnswerById } from "../../service/dephead_service/depAnswerService"
+import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
+import { acceptAnswer, getWaitingAnswerById, refuseAnswer } from "../../service/dephead_service/depAnswerService"
 import { useEffect, useState } from "react"
 import blankAvt from '../../assets/image/blank_avt.png'
 import { dateFormat } from "../../utils/string"
 
-const WatingAnswerModal = ({ handleClose, handleAcceptAnswer, handleRefuseAnswer }) => {
+const WatingAnswerModal = ({ handleClose, onDataChange }) => {
     const dispatch = useDispatch()
 
     const answerId = useSelector(depHInteractingAnswer)
@@ -51,6 +51,44 @@ const WatingAnswerModal = ({ handleClose, handleAcceptAnswer, handleRefuseAnswer
         handleRefuseAnswer(data)
     }
 
+    const handleAcceptAnswer = async () => {
+        if (!answerId) return
+        dispatch(showLoading())
+
+        try {
+            const response = await acceptAnswer(answerId)
+            dispatch(successMessage(response?.message ? response.message : 'Duyệt câu trả lời thành công'))
+            onDataChange()
+            setTimeout(() => {
+                handleClose()
+            }, 1000)
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
+    }
+
+    const handleRefuseAnswer = async () => {
+        if (!answerId) return
+        dispatch(showLoading())
+
+        try {
+            const data = content === '' ? { id: answerData.answer.id, data: {} }
+                : { id: answerData.answer.id, data: { content } }
+            const response = await refuseAnswer(data)
+            dispatch(successMessage(response?.message ? response.message : 'Từ chối câu trả lời thành công'))
+            onDataChange()
+            setTimeout(() => {
+                handleClose()
+            }, 1000)
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
+    }
+
 
 
     return (
@@ -89,7 +127,7 @@ const WatingAnswerModal = ({ handleClose, handleAcceptAnswer, handleRefuseAnswer
                     <button className={`px-4 py-2 min-w-[100px] bg-red-600 hover:bg-red-500 focus:border-red-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
                         onClick={() => { setRefuse(false) }}>Hủy</button>
                     <button className={`px-4 py-2 min-w-[100px] bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                        onClick={handleRefuseClick}>Gửi phản hồi</button>
+                        onClick={handleRefuseAnswer}>Gửi phản hồi</button>
                 </div>
             }
             {!refuse &&
@@ -97,7 +135,7 @@ const WatingAnswerModal = ({ handleClose, handleAcceptAnswer, handleRefuseAnswer
                     <button className={`px-4 py-2 min-w-[100px] bg-red-600 hover:bg-red-500 focus:border-red-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
                         onClick={() => { setRefuse(true) }}>Từ chối duyệt</button>
                     <button className={`px-4 py-2 min-w-[100px] bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                        onClick={() => handleAcceptAnswer(answerData.answer.id)}>Duyệt</button>
+                        onClick={() => handleAcceptAnswer()}>Duyệt</button>
                 </div>
             }
         </ModalLayout>

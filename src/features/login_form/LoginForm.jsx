@@ -1,7 +1,13 @@
 import { useState } from "react"
 import validator from "validator"
+import { addCookie } from "../../utils/cookie"
+import { useDispatch } from "react-redux"
+import { setUser } from "../../redux/slices/authSlice"
+import { errorMessage, successMessage } from "../../redux/slices/commonSlice"
+import { login } from "../../service/auth_service/authenticate"
 
-const LoginForm = ({ handleLogin, toggle }) => {
+const LoginForm = ({  toggle }) => {
+    const dispatch = useDispatch()
 
     const initInfor = {
         username: '', password: ''
@@ -10,11 +16,33 @@ const LoginForm = ({ handleLogin, toggle }) => {
 
     const [error, setError] = useState(initInfor)
 
+    const [isLoad, setIsLoad] = useState(false)
+
     const handleInputOnChange = (e) => {
         setLoginInfor({
             ...loginInfor,
             [e.target.name]: e.target.value
         })
+    }
+
+    const handleLogin = async () => {
+        if (isLoad) return
+        if (!usernameValidate() || !passwordValidate()) return
+
+        setIsLoad(true)
+        try {
+            const response = await login(loginInfor)
+            if (response.success) {
+                addCookie('accessToken', response.data.token)
+                dispatch(setUser(response.data))
+                dispatch(successMessage('Đăng nhập thành công'))
+            }
+        } catch (error) {
+            dispatch(errorMessage(error.message))
+        }
+        finally {
+            setIsLoad(false)
+        }
     }
 
     const usernameValidate = () => {

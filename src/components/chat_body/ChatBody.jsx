@@ -2,9 +2,31 @@ import ReactQuill from 'react-quill';
 import blankAvt from '../../assets/image/blank_avt.png'
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import SendIcon from '@mui/icons-material/Send';
+import { useEffect, useState } from 'react';
+import { getAllMessage } from '../../service/user/uMessageService';
+import { useDispatch } from 'react-redux';
+import { errorMessage } from '../../redux/slices/commonSlice';
 
 
-const ChatBody = () => {
+const ChatBody = ({ message }) => {
+
+    const dispatch = useDispatch()
+
+    const [messages, setMessage] = useState([])
+
+    useEffect(() => {
+        fetchGetAllMessage()
+    }, [message])
+
+    const fetchGetAllMessage = async() => {
+        try {
+            const response = await getAllMessage(message.get.id)
+            setMessage(response.data)
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy cuộc hội thoại'))
+        }
+    }
+
     return (
         <div className="col-span-3 border bg-[#EFF3F7] flex flex-col h-[90vh] relative">
             <div className="flex items-center px-4 py-2 shadow-md relative">

@@ -18,6 +18,7 @@ const Auth = () => {
     const [toggle, setToggle] = useState(1)
     const isAuthen = useSelector(isAuthenticatedSelector)
     const user = useSelector(userSelector)
+    const [isLoad, setIsLoad] = useState(false)
 
     useEffect(() => {
         getUserData()
@@ -51,42 +52,6 @@ const Auth = () => {
     }
 
 
-    const handleLogin = async (data) => {
-        dispatch(showLoading())
-        try {
-            const response = await login(data)
-            if (response.success) {
-                addCookie('accessToken', response.data.token)
-                dispatch(setUser(response.data))
-                dispatch(successMessage('Đăng nhập thành công'))
-            }
-        } catch (error) {
-            dispatch(errorMessage(error.message))
-        }
-        finally {
-            dispatch(hideLoading())
-        }
-    }
-
-    const handleRegister = async (data) => {
-        dispatch(showLoading())
-        try {
-            const res = await regsiter(data)
-            if (res.success) {
-                dispatch(successMessage('Tạo tài khoản thành công'))
-                setToggle(1)
-            } else {
-                dispatch(errorMessage('Tạo tài khoản thành công'))
-            }
-        } catch (error) {
-            dispatch(errorMessage(error.message))
-        }
-        finally {
-            dispatch(hideLoading())
-        }
-
-    }
-
     const handleResetPassword = async (data) => {
         dispatch(showLoading())
         try {
@@ -108,10 +73,10 @@ const Auth = () => {
         <div className='flex  items-center justify-between h-screen grid-cols-2 bg-white'>
             <div className='md:ml-20 ml-16'>
                 {(toggle === 1) ?
-                    <LoginForm handleLogin={handleLogin} toggle={setToggle} />
+                    <LoginForm toggle={setToggle} />
                     :
                     (toggle === 2) ?
-                        <RegisterForm handleRegister={handleRegister} toggle={setToggle} />
+                        <RegisterForm toggle={setToggle} />
                         :
                         <ForgotPasswordForm handleResetPassword={handleResetPassword} toggle={setToggle} />
                 }

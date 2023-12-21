@@ -15,7 +15,14 @@ const createField = (data) => {
     })
 }
 
+const updateFieldStatus = (id) => {
+    return API.patch(`/admin/fields/${id}`, {
+        headers: authHeader(getCookieByName('accessToken'))
+    })
+}
+
 export {
     getFields,
-    createField
+    createField,
+    updateFieldStatus
 }

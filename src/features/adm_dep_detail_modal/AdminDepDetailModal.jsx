@@ -5,8 +5,8 @@ import StaffCoordinateList from "../../components/staff_coordinate_list/StaffCoo
 import Pagination from "../../components/pagination"
 import { useDispatch, useSelector } from "react-redux"
 import { admInteractingDepId } from "../../redux/selectors/adminSelector"
-import { errorMessage, hideLoading, showLoading } from "../../redux/slices/commonSlice"
-import { getDepStaffById } from "../../service/admin_service/adminDepService"
+import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
+import { getDepStaffById, setDepHead } from "../../service/admin_service/adminDepService"
 import blankAvt from '../../assets/image/blank_avt.png'
 import AddHomeIcon from '@mui/icons-material/AddHome';
 
@@ -24,7 +24,7 @@ const AdminDepDetailModal = ({ handleClose, handleSetDep }) => {
 
     const [userList, setUserList] = useState([])
 
-    const [depHead, setDepHead] = useState({})
+    const [depH, setDepH] = useState({})
 
     useEffect(() => {
         getDepData()
@@ -37,7 +37,7 @@ const AdminDepDetailModal = ({ handleClose, handleSetDep }) => {
             if (response.success) {
                 setUserList(response.data.counsellor.items)
                 setTotalPage(response.data.counsellor.pages)
-                setDepHead(response.data.departmentHead)
+                setDepH(response.data.departmentHead)
             }
 
         } catch (error) {
@@ -47,26 +47,42 @@ const AdminDepDetailModal = ({ handleClose, handleSetDep }) => {
         }
     }
 
-    const handleButtonClick = async (userId) => {
-        await handleSetDep({ depId: depId, userId: userId })
-        getDepData()
+    // const handleButtonClick = async (userId) => {
+    //     await handleSetDep({ depId: depId, userId: userId })
+    //     getDepData()
+    // }
+
+
+    const handleSetDepHead = async (userId) => {
+        if (!confirm('Bạn muốn thay đổi trưởng khoa?')) return
+        dispatch(showLoading())
+        try {
+            const data = { depId: depId, userId: userId }
+            const response = await setDepHead(data)
+            dispatch(successMessage(response?.message ? response.message : 'Thêm trưởng khoa thành công'))
+            getDepData()
+        } catch (error) {
+            dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
+        }
     }
 
     return (
-        <ModalLayout handleClose={handleClose} title={'Thông tin phòng ban'}>
+        <ModalLayout handleClose={handleClose} title={'Thông tin khoa'}>
             <div className="flex items-center mb-4 w-full">
-                <img src={blankAvt} alt={'depHead'} className="w-12 h-12 rounded-md mr-4" />
+                <img src={depH?.avatar ? depH.avatar : blankAvt} alt={'depHead'} className="w-12 h-12 rounded-md mr-4" />
                 <div className='flex justify-between w-full'>
                     <div>
-                        <h3 className="text-md font-semibold">{depHead?.name ? depHead.name : 'Chưa có trưởng phòng ban'}</h3>
-                        <p className="text-gray-500 text-sm">{depHead?.email ? depHead.email : ''}</p>
+                        <h3 className="text-md font-semibold">{depH?.name ? depH.name : 'Chưa có trưởng khoa'}</h3>
+                        <p className="text-gray-500 text-sm">{depH?.email ? depH.email : ''}</p>
                     </div>
                 </div>
             </div>
             <SearchBar params={params} setParams={setParams} />
 
             <div className="mb-4">
-                < StaffCoordinateList staffList={userList} handleButtonClick={handleButtonClick} />
+                < StaffCoordinateList staffList={userList} handleButtonClick={handleSetDepHead} />
             </div>
 
             <Pagination

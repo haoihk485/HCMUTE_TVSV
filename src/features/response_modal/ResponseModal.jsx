@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux"
 import ModalLayout from "../../components/modal_layout"
 import { questionOnInteract } from "../../redux/selectors/counsellorSelector"
-import { getQuestionById, privateResponse, responseQuestion } from "../../service/counsellor_service/counsellorQuestionService"
+import { forwardQuestion, getQuestionById, privateResponse, responseQuestion } from "../../service/counsellor_service/counsellorQuestionService"
 import { errorMessage, hideLoading, showLoading, successMessage } from "../../redux/slices/commonSlice"
 import { useEffect, useState } from "react"
 import { dateFormat } from "../../utils/string"
@@ -10,7 +10,7 @@ import 'react-quill/dist/quill.snow.css';
 import { getDepList } from "../../service/admin_service/adminUserService"
 
 
-const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange }) => {
+const ResponseModal = ({ handleClose, dataChange }) => {
 
     const dispatch = useDispatch()
     const questionId = useSelector(questionOnInteract)
@@ -54,46 +54,59 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
             if (response.success) {
                 setDepList(response.data)
             } else {
-                dispatch(successMessage(response?.message ? response.message : 'Lỗi lấy danh sách phòng ban'))
+                dispatch(successMessage(response?.message ? response.message : 'Lỗi lấy danh sách khoa'))
             }
         } catch (error) {
-            dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy danh sách phòng ban'))
+            dispatch(errorMessage(error?.message ? error.message : 'Lỗi lấy danh sách khoa'))
         } finally {
             dispatch(hideLoading())
         }
     }
 
-    const responseClick = async () => {
-        const data = {
-            isPrivate: false,
-            content,
-            questionId
-        }
+
+    const handleResponse = async () => {
+        dispatch(showLoading())
+
         try {
-            await handleResponse(data)
-            setContent('')
-            setShowResponse(false)
+            const data = { isPrivate: false, content, questionId }
+            const response = await responseQuestion(data)
+            dispatch(successMessage(response?.message ? response.message : 'Phản hồi thành công'))
+            dataChange()
+            setTimeout(() => {
+                handleClose()
+            }, 1000);
         } catch (error) {
-            console.log(error);
+            dispatch(errorMessage(error?.message ? error.message : 'Cõ lỗi xảy ra'))
+        } finally {
+            dispatch(hideLoading())
         }
     }
 
-    const forwardClick = async () => {
+
+    const handleForward = async () => {
         if (forwardDepId === '') {
             dispatch(errorMessage('Chưa chọn khoa chuyển đến'))
             return
         }
-        const data = {
-            questionId: questionId,
-            departmentId: forwardDepId
-        }
+
+        dispatch(showLoading())
+
         try {
-            await handleForward(data)
-            setShowForwardOption(false)
+            const data = {
+                questionId: questionId,
+                departmentId: forwardDepId
+            }
+            const response = await forwardQuestion(data)
+            dispatch(successMessage(response?.message ? response.message : 'Chuyển tiếp thành công'))
+            dataChange()
         } catch (error) {
-            console.log(error);
+            dispatch(errorMessage(error?.message ? error.message : 'Lỗi chuyển tiếp người dùng'))
+        } finally {
+            dispatch(hideLoading())
         }
     }
+
+
 
     const handlePrivateResponse = async () => {
         dispatch(showLoading())
@@ -101,13 +114,9 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
         try {
             const data = { questionId, content: privateMessage }
             const response = await privateResponse(data)
-            if (response.success) {
-                dispatch(successMessage(response?.message ? response.message : 'Đã phản hồi qua hộp thư'))
-                dataChange()
-                handleClose()
-            } else {
-                dispatch(errorMessage(response?.message ? response.message : 'Có lỗi xảy ra'))
-            }
+            dispatch(successMessage(response?.message ? response.message : 'Đã phản hồi qua hộp thư'))
+            dataChange()
+            handleClose()
 
         } catch (error) {
             dispatch(errorMessage(error?.message ? error.message : 'Có lỗi xảy ra'))
@@ -146,7 +155,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                                 setShowPrivate(true)
                                 setPrivateMessage(`<p><strong>Câu hỏi của bạn đến khoa: "${questionData.departmentName}".
                                     </strong></p><p><strong>Về lĩnh vực : "${questionData.fieldName}" .</strong></p>
-                                    <p><strong>Với nội dung: "${questionData.content}".</strong></p>
+                                    <p><strong>Với tiêu đề: "${questionData.title}".</strong></p>
                                     <p><strong>Đây là phản từ nhân viên hệ thống đến trực tiếp cho bạn về câu hỏi trên.</strong></p><p><br>
                                     </p><p>Nội dung phản hồi:</p><p><br></p>`)
                             }}>Trả lời qua tin nhắn</button>
@@ -167,7 +176,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                         <p className="font-bold text-lg">Phản hồi:</p>
                         <ReactQuill
                             value={content}
-                            className=' bg-white'
+                            className=' bg-white border border-[#CCCCCC] rounded-md overflow-hidden'
                             theme='snow'
                             placeholder='Nội dung...'
                             onChange={setContent}
@@ -178,7 +187,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                                     setShowResponse(false)
                                 }}>Hủy</button>
                             <button className={`px-4 py-2 bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                                onClick={responseClick}>Đăng</button>
+                                onClick={handleResponse}>Đăng</button>
                         </div>
                     </div>
                 }
@@ -186,7 +195,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                     <div className="mt-4 duration-500">
                         <p className="font-bold text-lg">Tạo tin nhắn:</p>
                         <ReactQuill
-                            className=' bg-white'
+                            className=' bg-white border border-[#CCCCCC] rounded-md overflow-hidden'
                             theme='snow'
                             placeholder='Nội dung...'
                             onChange={setPrivateMessage}
@@ -206,7 +215,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                 {showForwardOptions &&
                     <>
                         <div className="mt-3 border shadow-md rounded-md px-5 pt-2 pb-5">
-                            <h1 className="font-bold text-lg">Chọn phòng ban muốn chuyển đến:</h1>
+                            <h1 className="font-bold text-lg">Chọn khoa muốn chuyển đến:</h1>
                             <select
                                 className="border w-full py-1 rounded-md shadow-md"
                                 onChange={e => setForwardDepId(e.target.value)}>
@@ -223,7 +232,7 @@ const ResponseModal = ({ handleClose, handleResponse, handleForward, dataChange 
                                     setShowForwardOption(false)
                                 }}>Hủy</button>
                             <button className={`px-4 py-2 bg-green-600 hover:bg-green-500 focus:border-green-300 text-white rounded-md  focus:outline-none focus:ring duration-500`}
-                                onClick={forwardClick}>Chuyển đến</button>
+                                onClick={handleForward}>Chuyển đến</button>
                         </div>
                     </>
                 }

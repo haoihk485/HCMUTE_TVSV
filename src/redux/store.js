@@ -9,7 +9,7 @@ import depHeadFieldSlice from "./slices/department_head/depHeadFieldSlice";
 import questionSlice from "./slices/public/questionSlice";
 import counsellorQuestionSlice from "./slices/counsellor/counsellorQuestionSlice";
 import depHeadAnswerSlice from "./slices/department_head/depHeadAnswerSlice";
-import DepartmentHeadFaqs from "../pages/department_head/DepartmentHeadFaqs";
+import DepartmentHeadFaqs from "../pages/department_head/department_head_faqs/DepartmentHeadFaqs";
 import depHeadFaqsSlice from "./slices/department_head/depHeadFaqsSlice";
 
 const store = configureStore({

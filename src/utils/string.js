@@ -23,3 +23,11 @@ export function dateFormat(date) {
 
     return ngayDinhDang;
 }
+
+export function truncate(array, maxlength) {
+    if (array.length > maxlength) {
+        return array.substring(0, maxlength) + ' ...'; 
+    } else {
+        return array; 
+    }
+}
